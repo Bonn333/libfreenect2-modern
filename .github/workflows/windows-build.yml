@@ -42,9 +42,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - variant: cpu
+          - variant: cpu      # CPU depth pipeline only
+            opengl: false
+            opencl: false
             cuda: false
-          - variant: cuda
+          - variant: gl       # CPU + OpenGL
+            opengl: true
+            opencl: false
+            cuda: false
+          - variant: cuda     # everything: CPU + OpenGL + OpenCL + CUDA
+            opengl: true
+            opencl: true
             cuda: true
 
     steps:
@@ -113,16 +121,15 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Get-Command ninja -ErrorAction SilentlyContinue)) { choco install ninja -y --no-progress }
-          $cuda = if ('${{ matrix.cuda }}' -eq 'true') { 'ON' } else { 'OFF' }
           # cl is forced explicitly: the runner's PATH also contains MinGW gcc (Strawberry Perl).
           cmake -S . -B build -G Ninja `
             -C "$env:DEPS_DIR/deps.cmake" `
             -DCMAKE_BUILD_TYPE="$env:BUILD_TYPE" `
             -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl `
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" `
-            -DENABLE_CUDA="$cuda" `
-            -DENABLE_OPENCL=ON `
-            -DENABLE_OPENGL=ON `
+            -DENABLE_CUDA=${{ matrix.cuda && 'ON' || 'OFF' }} `
+            -DENABLE_OPENCL=${{ matrix.opencl && 'ON' || 'OFF' }} `
+            -DENABLE_OPENGL=${{ matrix.opengl && 'ON' || 'OFF' }} `
             -DENABLE_VAAPI=OFF `
             -DENABLE_TEGRAJPEG=OFF `
             -DBUILD_OPENNI2_DRIVER=OFF `
@@ -135,11 +142,17 @@ jobs:
         shell: pwsh
         run: |
           $config = Get-Content build/libfreenect2/config.h -Raw
-          $required = @('TURBOJPEG', 'OPENGL', 'OPENCL')
-          if ('${{ matrix.cuda }}' -eq 'true') { $required += 'CUDA' }
-          $missing = $required | Where-Object { $config -notmatch "#define LIBFREENECT2_WITH_$($_)_SUPPORT" }
-          if ($missing) { throw "Features not enabled: $($missing -join ', ')" }
-          Write-Host "Enabled: $($required -join ', ')"
+          $expected = [ordered]@{
+            TURBOJPEG = $true
+            OPENGL    = '${{ matrix.opengl }}' -eq 'true'
+            OPENCL    = '${{ matrix.opencl }}' -eq 'true'
+            CUDA      = '${{ matrix.cuda }}' -eq 'true'
+          }
+          $wrong = $expected.Keys | Where-Object {
+            ($config -match "#define LIBFREENECT2_WITH_$($_)_SUPPORT") -ne $expected[$_]
+          }
+          if ($wrong) { throw "Feature state differs from the matrix for: $($wrong -join ', ')" }
+          Write-Host "Enabled: $(($expected.Keys | Where-Object { $expected[$_] }) -join ', ')"
 
       - name: Build
         run: cmake --build build --parallel
@@ -161,7 +174,7 @@ jobs:
             Copy-Item $cudart.FullName "$install/bin"
           }
           $version = if ('${{ github.ref_type }}' -eq 'tag') { '${{ github.ref_name }}' } else { "g$('${{ github.sha }}'.Substring(0, 7))" }
-          $variant = if ('${{ matrix.cuda }}' -eq 'true') { "cuda$($env:CUDA_VERSION -replace '^(\d+\.\d+).*', '$1')" } else { 'cpu' }
+          $variant = if ('${{ matrix.cuda }}' -eq 'true') { "cuda$($env:CUDA_VERSION -replace '^(\d+\.\d+).*', '$1')" } else { '${{ matrix.variant }}' }
           "PACKAGE_NAME=libfreenect2-$version-win64-$variant" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
           Get-ChildItem -Recurse $install | Select-Object -ExpandProperty FullName
 

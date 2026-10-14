@@ -294,11 +294,12 @@ cmake --build . --config RelWithDebInfo --target install
 
 ### Windows / prebuilt CI binaries
 
-The [Windows build](.github/workflows/windows-build.yml) workflow builds x64 MSVC packages on every push and pull request, in two variants:
+The [Windows build](.github/workflows/windows-build.yml) workflow builds x64 MSVC packages on every push and pull request, in three variants:
 
 | Artifact | Pipelines |
 |----------|-----------|
-| `libfreenect2-<ver>-win64-cpu` | CPU, OpenGL, OpenCL |
+| `libfreenect2-<ver>-win64-cpu` | CPU |
+| `libfreenect2-<ver>-win64-gl` | CPU, OpenGL |
 | `libfreenect2-<ver>-win64-cuda12.9` | CPU, OpenGL, OpenCL, CUDA (bundles `cudart64_12.dll`) |
 
 Download them from the run's *Artifacts* section. Pushing a `v*` tag also attaches both packages as zips to a GitHub release. A manual run (*Run workflow*) lets you pick the CUDA version and build type.
