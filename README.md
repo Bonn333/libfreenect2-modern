@@ -299,7 +299,7 @@ The [Windows build](.github/workflows/windows-build.yml) workflow builds x64 MSV
 | Artifact | Pipelines |
 |----------|-----------|
 | `libfreenect2-<ver>-win64-cpu` | CPU |
-| `libfreenect2-<ver>-win64-gl` | CPU, OpenGL |
+| `libfreenect2-<ver>-win64-gl-opencl` | CPU, OpenGL, OpenCL |
 | `libfreenect2-<ver>-win64-cuda12.9` | CPU, OpenGL, OpenCL, CUDA (bundles `cudart64_12.dll`) |
 
 Download them from the run's *Artifacts* section. Pushing a `v*` tag also attaches both packages as zips to a GitHub release. A manual run (*Run workflow*) lets you pick the CUDA version and build type.

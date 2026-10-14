@@ -46,9 +46,9 @@ jobs:
             opengl: false
             opencl: false
             cuda: false
-          - variant: gl       # CPU + OpenGL
+          - variant: gl-opencl  # CPU + OpenGL + OpenCL
             opengl: true
-            opencl: false
+            opencl: true
             cuda: false
           - variant: cuda     # everything: CPU + OpenGL + OpenCL + CUDA
             opengl: true
