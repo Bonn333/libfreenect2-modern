@@ -37,7 +37,7 @@ env:
 jobs:
   build:
     name: Windows x64 (${{ matrix.variant }})
-    runs-on: windows-2025
+    runs-on: windows-2022  # VS 2022: CUDA 12.x does not support the VS 2026 toolset on windows-2025
     strategy:
       fail-fast: false
       matrix:
