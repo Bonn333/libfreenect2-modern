@@ -5,6 +5,7 @@
 **Modernized build system and enhanced compatibility for libfreenect2**  
 *Kinect v2 driver with improved Visual Studio and CUDA support*
 
+[![Windows build](https://github.com/Bonn333/libfreenect2-modern/actions/workflows/windows-build.yml/badge.svg)](https://github.com/Bonn333/libfreenect2-modern/actions/workflows/windows-build.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%7C%20GPL%20v2-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#installation)
 [![CUDA](https://img.shields.io/badge/CUDA-8.0--12.9%2B-green.svg)](#cuda-support)
@@ -290,6 +291,23 @@ cmake --build . --config RelWithDebInfo --target install
    - `turbojpeg.dll`
 2. Run `C:\Program Files\OpenNI2\Tools\NiViewer.exe`
 3. Set `LIBFREENECT2_PIPELINE=cuda` to force specific pipeline
+
+### Windows / prebuilt CI binaries
+
+The [Windows build](.github/workflows/windows-build.yml) workflow builds x64 MSVC packages on every push and pull request, in two variants:
+
+| Artifact | Pipelines |
+|----------|-----------|
+| `libfreenect2-<ver>-win64-cpu` | CPU, OpenGL, OpenCL |
+| `libfreenect2-<ver>-win64-cuda12.9` | CPU, OpenGL, OpenCL, CUDA (bundles `cudart64_12.dll`) |
+
+Download them from the run's *Artifacts* section. Pushing a `v*` tag also attaches both packages as zips to a GitHub release. A manual run (*Run workflow*) lets you pick the CUDA version and build type.
+
+The workflow fetches its dependencies with [`.github/scripts/fetch-windows-deps.ps1`](.github/scripts/fetch-windows-deps.ps1), which also works locally:
+```powershell
+./.github/scripts/fetch-windows-deps.ps1 -DestDir deps-win
+cmake -S . -B build -G Ninja -C deps-win/deps.cmake -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
+```
 
 ### Windows / vcpkg
 
